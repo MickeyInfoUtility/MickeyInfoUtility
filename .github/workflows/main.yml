@@ -5,8 +5,16 @@ on:
 jobs:
   deploy-to-github-pages:
     runs-on: ubuntu-latest
+    # Add these permissions
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+      
     steps:
     - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v3
@@ -44,6 +52,7 @@ jobs:
       with:
         branch: gh-pages
         folder: release/wwwroot
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Display deployment URL
       run: |
