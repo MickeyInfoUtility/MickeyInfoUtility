@@ -1,0 +1,225 @@
+﻿@page "/renovation"
+@using MickeyInfoUtility.Interfaces
+@using MickeyInfoUtility.Models
+@using MickeyInfoUtility.Models.Shared
+
+@inject IRenovationService RenovationService
+@inject ILogger<Renovation> Logger
+<link href="css/House/Renovation/Renovation.css" rel="stylesheet" />
+
+<div class="renovation-dashboard">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Renovation Dashboard</h1>
+        <div class="key-selector">
+            <select class="key-dropdown" value="@selectedKey" @onchange="OnKeySelected">
+                <option value="">Select a renovation list...</option>
+                @foreach (var key in availableKeys)
+                {
+                    <option value="@key.Key">@key.Description</option>
+                }
+            </select>
+        </div>
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
+            <span class="search-icon">&#128269;</span>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="error-message">
+            @errorMessage
+        </div>
+    }
+    else if (renovationItems == null)
+    {
+        if (!string.IsNullOrEmpty(selectedKey))
+        {
+            <div class="loading-spinner"></div>
+        }
+        else
+        {
+            <div class="info-message">
+                Please select a renovation list to view items.
+            </div>
+        }
+    }
+    else if (!renovationItems.Any())
+    {
+        <div class="info-message">
+            No renovation items found.
+        </div>
+    }
+    else
+    {
+        <div class="total-cost">
+            Total Renovation Cost: <span class="cost-value">@totalCost.ToString("C2")</span>
+        </div>
+
+        <div class="category-grid">
+            @foreach (var category in groupedItems.Keys)
+            {
+                var categoryItems = groupedItems[category];
+                var categoryTotal = categoryItems.Sum(item => item.TotalPrice);
+                var latestPurchaseDate = categoryItems.Max(item => item.PurchaseDate);
+                var shops = categoryItems.Select(item => item.ShopName).Distinct();
+                var contacts = categoryItems.Select(item => item.Contact).Distinct();
+
+                <div class="category-card" @onclick="() => ToggleCategory(category)">
+                    <h2 class="category-title">@category</h2>
+                    <div class="category-summary">
+                        <p>Total: @categoryTotal.ToString("C2")</p>
+                        <p>Items: @categoryItems.Count</p>
+                        <p>Latest Purchase: @(latestPurchaseDate?.ToShortDateString() ?? "N/A")</p>
+                        <p>Shops: @string.Join(", ", shops)</p>
+                        <p>Contacts: @string.Join(", ", contacts)</p>
+                    </div>
+
+                    @if (expandedCategory == category)
+                    {
+                        <div class="item-list">
+                            @foreach (var item in categoryItems.Where(i => i.ItemName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                <div class="item-card" @onclick="() => ShowDetails(item)">
+                                    <h3 class="item-name">@item.ItemName</h3>
+                                    <p class="item-details">
+                                        @item.Quantity @item.Measurement
+                                        <span class="item-price">@item.TotalPrice.ToString("C2")</span>
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (selectedItem != null)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>@selectedItem.ItemName</h2>
+                <button class="close-button" @onclick="CloseModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Quantity:</strong> @selectedItem.Quantity @selectedItem.Measurement</p>
+                <p><strong>Unit Price:</strong> @selectedItem.UnitPrice.ToString("C2")</p>
+                <p><strong>Total Price:</strong> @selectedItem.TotalPrice.ToString("C2")</p>
+                <p><strong>Purchase Date:</strong> @(selectedItem.PurchaseDate?.ToShortDateString() ?? "N/A")</p>
+                <p><strong>Shop Name:</strong> @selectedItem.ShopName</p>
+                <p><strong>Salesperson:</strong> @selectedItem.Salesperson</p>
+                <p><strong>Contact:</strong> @selectedItem.Contact</p>
+                <p><strong>Invoice/Quotation Number:</strong> @selectedItem.InvoiceQuotationNumber</p>
+                <p><strong>Category:</strong> @selectedItem.Category</p>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop" @onclick="CloseModal"></div>
+}
+
+@code {
+    private List<KeyListItem> availableKeys = new List<KeyListItem>();
+    private string selectedKey = "";
+    private List<RenovationItem> renovationItems;
+    private Dictionary<string, List<RenovationItem>> groupedItems;
+    private string errorMessage;
+    private decimal totalCost;
+    private RenovationItem selectedItem;
+    private string searchTerm = "";
+    private string expandedCategory;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            availableKeys = await RenovationService.GetAvailableKeys();
+            Logger.LogInformation($"Loaded {availableKeys.Count} available keys");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading available keys");
+            errorMessage = $"An error occurred while loading the renovation lists: {ex.Message}";
+        }
+    }
+    private async Task OnKeySelected(ChangeEventArgs e)
+    {
+        selectedKey = e.Value?.ToString() ?? "";
+        await LoadRenovationItems();
+    }
+    private async Task LoadRenovationItems()
+    {
+        if (string.IsNullOrEmpty(selectedKey))
+        {
+            renovationItems = null;
+            groupedItems = null;
+            totalCost = 0;
+            return;
+        }
+
+        try
+        {
+            errorMessage = null;
+            renovationItems = null; // Reset to show loading spinner
+            renovationItems = await RenovationService.GetRenovationItems(selectedKey);
+            Logger.LogInformation($"Received {renovationItems?.Count ?? 0} renovation items");
+
+            if (renovationItems != null && renovationItems.Any())
+            {
+                GroupItems();
+                CalculateTotalCost();
+                Logger.LogInformation($"Grouped items: {groupedItems?.Count ?? 0} categories");
+                Logger.LogInformation($"Total cost: {totalCost}");
+            }
+            else
+            {
+                Logger.LogWarning("No renovation items received or list is empty");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error fetching renovation data");
+            errorMessage = $"An error occurred while fetching the renovation data: {ex.Message}";
+            renovationItems = null;
+            groupedItems = null;
+            totalCost = 0;
+        }
+    }
+
+    private void GroupItems()
+    {
+        groupedItems = renovationItems
+            .GroupBy(item => item.Category)
+            .OrderBy(group => group.Key)
+            .ToDictionary(group => group.Key, group => group.ToList());
+    }
+
+    private void CalculateTotalCost()
+    {
+        totalCost = renovationItems.Sum(item => item.TotalPrice);
+    }
+
+    private void ShowDetails(RenovationItem item)
+    {
+        selectedItem = item;
+    }
+
+    private void CloseModal()
+    {
+        selectedItem = null;
+    }
+
+    private void ToggleCategory(string category)
+    {
+        if (expandedCategory == category)
+        {
+            expandedCategory = null;
+        }
+        else
+        {
+            expandedCategory = category;
+        }
+    }
+}
