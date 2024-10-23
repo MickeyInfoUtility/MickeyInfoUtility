@@ -1,0 +1,306 @@
+﻿
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --background-color: #f5f7fa;
+    --card-background: #ffffff;
+    --text-color: #34495e;
+    --border-color: #ecf0f1;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.renovation-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.dashboard-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.search-container {
+    position: relative;
+    width: 300px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 20px 12px 40px;
+    border: none;
+    border-radius: 25px;
+    background-color: var(--card-background);
+    box-shadow: 0 2px 10px var(--shadow-color);
+    font-size: 1rem;
+    transition: box-shadow 0.3s ease;
+}
+
+    .search-input:focus {
+        outline: none;
+        box-shadow: 0 4px 15px var(--shadow-color);
+    }
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary-color);
+}
+
+.total-cost {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: right;
+    margin-bottom: 20px;
+    color: var(--secondary-color);
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.category-card {
+    background-color: var(--card-background);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px var(--shadow-color);
+    }
+
+.category-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.category-summary p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.item-list {
+    margin-top: 20px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
+
+.item-card {
+    background-color: var(--background-color);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+}
+
+    .item-card:hover {
+        background-color: var(--border-color);
+    }
+
+.item-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: var(--primary-color);
+}
+
+.item-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.item-price {
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+    .loading-spinner::after {
+        content: "";
+        width: 50px;
+        height: 50px;
+        border: 3px solid var(--border-color);
+        border-top: 3px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.error-message,
+.info-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.info-message {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.modal-content {
+    background-color: var(--card-background);
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1001;
+    box-shadow: 0 10px 30px var(--shadow-color);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+    .modal-header h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin: 0;
+    }
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.modal-body p {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.modal-body strong {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+/* Add these styles to your existing Renovation.css file */
+
+.key-selector {
+    margin-bottom: 1rem;
+}
+
+.key-dropdown {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-width: 200px;
+    font-size: 1rem;
+}
+
+    .key-dropdown:focus {
+        outline: none;
+        border-color: #4CAF50;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+@media (max-width: 768px) {
+    .renovation-dashboard {
+        padding: 15px;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-title {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+
+    .search-container {
+        width: 100%;
+    }
+
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .total-cost {
+        font-size: 1.2rem;
+        text-align: left;
+    }
+
+    .modal-content {
+        padding: 20px;
+    }
+}
